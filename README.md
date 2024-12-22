@@ -69,6 +69,54 @@ print(result.text_content)
 docker build -t markitdown:latest .
 docker run --rm -i markitdown:latest < ~/your-file.pdf > output.md
 ```
+
+### Web API
+
+You can also use MarkItDown via a REST endpoint. The Web API is built using FastAPI and can be run using Docker.
+
+#### Running the Web API
+
+1. Build the Docker image:
+
+```sh
+docker build -f Dockerfile.api -t markitdown-api:latest .
+```
+
+2. Run the Docker container:
+
+```sh
+docker run --rm -p 8000:8000 markitdown-api:latest
+```
+
+The Web API will be available at `http://localhost:8000`.
+
+Optionally, you can specify a number of workers to support concurrent requests:
+```sh
+docker run --rm -p 8000:8000 markitdown-api:latest --workers 4
+```
+See the documentation of [FastAPI in
+Containers](https://fastapi.tiangolo.com/deployment/docker/) for more details.
+
+
+#### Using the Web API
+
+The Web API provides a single endpoint `/convert` that accepts a file and returns the converted markdown.
+
+- **Endpoint:** `/convert`
+- **Method:** `POST`
+- **Request Body:** Multipart form data with a file field named `file`
+- **Response:** depends on the `Accept` header:
+  - `application/json` the JSON serialization of the `DocumentConverterResult`,
+    i.e. an object with a `text_content` field containing the converted markdown
+    and (optionally) a `title` field containing the title of the document
+  - (otherwise) a `text/markdown` response containing the converted markdown
+
+Example using `curl`:
+
+```sh
+curl -X POST "http://localhost:8000/convert" -F "file=@path-to-file.pdf"
+```
+
 <details>
     
 <summary>Batch Processing Multiple Files</summary>
